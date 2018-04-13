@@ -98,7 +98,7 @@ def Solve_Sudoku(Map, mode):
                     Min_j = n
         # 候选数为0(无解分支)
         if Min == 0:
-            if 0 in Map:
+            if S.size() == 1:
                 return None, False
             else:
                 # 返回操作并出栈
@@ -135,6 +135,104 @@ def Solve_Sudoku(Map, mode):
             return Map,True
             
 
+def Solve_Sudoku1(Map, mode):  
+    # 单解跳出  
+    global FSingleSolution  
+    if FSingleSolution == True:  
+        return Map  
+    # 候选数阵列  
+    Candidates = ones((9, 9, 9), dtype = int32)  
+    # 检查是否求解完毕  
+    FComplete = True  
+    for i in range(0, 9):  
+        for j in range(0, 9):  
+            if Map[i][j] == 0:  
+                FComplete = False  
+                break  
+    # 求解完毕  
+    if FComplete == True:  
+        # 输出解  
+        print "Solution Accomplished!"  
+        global Solution  
+        Solution = Map.copy()# 独立复制   
+        # 找到单解后返回  
+        if mode == 0:  
+            FSingleSolution = True  
+            return Map  
+        # 返回操作并出栈  
+        if S.isEmpty() == False:  
+            Map = S.peek().copy()  
+            S.pop()  
+            #print "Stack OUT... (size:", S.size(), ")"  
+        return Map  
+    # 未求解完毕  
+    else:  
+        # 更新候选数阵列  
+        #print "Updating Candidates..."  
+        for i in range(0, 9):  
+            for j in range(0, 9):  
+                if Map[i][j] != 0:  
+                    # 列  
+                    for m in range(0, 9):  
+                        if Map[m][j] == 0:  
+                            Candidates[m][j][Map[i][j] - 1] = 0  
+                    # 行  
+                    for n in range(0, 9):  
+                        if Map[i][n] == 0:  
+                            Candidates[i][n][Map[i][j] - 1] = 0  
+                    # 单元九宫格  
+                    for m in range(3 * (i // 3), 3 * (i // 3) + 3):  
+                        for n in range(3 * (j // 3), 3 * (j // 3) + 3):  
+                            if Map[m][n] == 0:  
+                                Candidates[m][n][Map[i][j] - 1] = 0  
+        # 寻找最少候选数  
+        #print "Finding MIN Candidates..."  
+        Min = 9  
+        for m in range(0, 9):  
+            for n in range(0, 9):  
+                count = sum(Candidates[m][n][:])  
+                if count < Min:  
+                    Min = count  
+                    Min_i = m  
+                    Min_j = n  
+        #print Min, "candidate(s) available at (", Min_i + 1, ",", Min_j + 1, ")"  
+        # 候选数为0(无解分支)  
+        if Min == 0:  
+            # 返回操作并出栈  
+            Map = S.peek().copy()  
+            S.pop()  
+            #print "Stack OUT... (size:", S.size(), ")"  
+            return Map  
+        # 存在候选数  
+        else:  
+            # 逐一假设  
+            for k in range(1, Min + 1):  
+                # 入栈  
+                p = "%d" %(S.size() + 1)  
+                S_Map = "S_Map" + p  
+                exec(S_Map + " = Map.copy()")  
+                exec("S.push(" + S_Map + ")")# S.push(S_Map【S.size()+1】)  
+                #print "Stack IN... (size:", S.size(), ")"  
+                # 填入候选数  
+                count = 0  
+                for o in range(0, 9):  
+                    count = count + Candidates[Min_i][Min_j][o]  
+                    if count == k:  
+                        break  
+                Map[Min_i][Min_j] = o + 1  
+                #Print_Sudoku(Map)  
+                # 使用递归函数进行回溯求解  
+                Map = Solve_Sudoku1(Map, mode)  
+                # 单解跳出  
+                if FSingleSolution == True:  
+                    return Map  
+            # 返回操作并出栈  
+            if S.isEmpty() == False:  
+                Map = S.peek().copy()  
+                S.pop()  
+                #print "Stack OUT... (size:", S.size(), ")"  
+            return Map  
+
 tmp = [1,2,3,4,5,6,7,8,9]
 def check_sudoku(Map):
     #
@@ -164,7 +262,7 @@ def main():
     Solve_Sudoku(Sudoku, 0)# 搜索单解
     #Solve_Sudoku(Sudoku, 1)# 搜索所有解
     #Print_Sudoku(Solution)
-
+ 
 """#################main#################"""
 if __name__ == '__main__':
     main()
